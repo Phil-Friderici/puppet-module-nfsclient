@@ -5,9 +5,9 @@ class nfsclient (
 ) {
 
   if is_bool($gss) == true {
-    $gss_real = $gss
+    $gss_bool = $gss
   } else {
-    $gss_real = str2bool($gss)
+    $gss_bool = str2bool($gss)
   }
 
   if $keytab != undef {
@@ -16,99 +16,35 @@ class nfsclient (
 
   case $::osfamily {
     'RedHat': {
-      include ::nfs::idmap
       $gss_line     = 'SECURE_NFS'
       $keytab_line  = 'RPCGSSDARGS'
-      $service      = 'rpcgssd'
-      $nfs_requires = Service['idmapd_service']
       $nfs_sysconf  = '/etc/sysconfig/nfs'
-      if $::operatingsystemrelease =~ /^7/ {
-        if $keytab {
-          service { 'nfs-config':
-            ensure    => 'running',
-            enable    => true,
-            subscribe => File_line['GSSD_OPTIONS'],
-          }
-          file { '/etc/krb5.keytab':
-            ensure => 'symlink',
-            target => $keytab,
-          }
-          if $gss_real {
-            Service['nfs-config'] ~> Service['rpcgssd']
-            Service['rpcbind_service'] -> Service['rpcgssd']
-            File['/etc/krb5.keytab'] {
-              notify => Service['rpcgssd'],
-            }
-          }
-        }
-      }
+      $nfs_requires = Service['idmapd_service']
+      $service      = 'rpcgssd'
+
+      include ::nfs::idmap
     }
     'Suse': {
       $gss_line    = 'NFS_SECURITY_GSS'
       $keytab_line = 'GSSD_OPTIONS'
-      # Setting nfs_requires to undef just fixes the code
-      # Someone with better functional knowledge should fix functionality if needed or remove this comment.
-      $nfs_requires = undef
       $nfs_sysconf  = '/etc/sysconfig/nfs'
-      if $::operatingsystemrelease =~ /^11/ {
-        $service = 'nfs'
-        if $gss_real {
-          file_line { 'NFS_START_SERVICES':
-            match  => '^NFS_START_SERVICES=',
-            path   => '/etc/sysconfig/nfs',
-            line   => 'NFS_START_SERVICES="yes"',
-            notify => [ Service[nfs], Service[rpcbind_service], ],
-          }
-          file_line { 'MODULES_LOADED_ON_BOOT':
-            match  => '^MODULES_LOADED_ON_BOOT=',
-            path   => '/etc/sysconfig/kernel',
-            line   => 'MODULES_LOADED_ON_BOOT="rpcsec_gss_krb5"',
-            notify => Exec[gss-module-modprobe],
-          }
-          exec { 'gss-module-modprobe':
-            command     => 'modprobe rpcsec_gss_krb5',
-            unless      => 'lsmod | egrep "^rpcsec_gss_krb5"',
-            path        => '/sbin:/usr/bin',
-            refreshonly => true,
-          }
-        }
-      }
-      if $::operatingsystemrelease =~ /^12/ {
-        $service = 'rpc-gssd'
-        if $keytab {
-          file { '/etc/krb5.keytab':
-            ensure => 'symlink',
-            target => $keytab,
-          }
-          if $gss_real {
-            File['/etc/krb5.keytab'] {
-              notify => Service[$service],
-            }
-          }
-        }
+      $nfs_requires = undef
+      $service = $::operatingsystemrelease ? {
+        /^11/   => 'nfs',
+        default => 'rpc-gssd',
       }
     }
     'Debian': {
       $gss_line     = 'NEED_GSSD'
       $keytab_line  = 'GSSDARGS'
-      $service      = 'gssd'
-      $nfs_requires = undef
       $nfs_sysconf  = '/etc/default/nfs-common'
+      $nfs_requires = undef
+      $service      = 'gssd'
+
       # Puppet 3.x Incorrectly defaults to upstart for Ubuntu 16.x
       if $::operatingsystemrelease == '16.04' and $::operatingsystem == 'Ubuntu' {
         Service {
           provider => 'systemd',
-        }
-      }
-      if $keytab {
-        file { '/etc/krb5.keytab':
-          ensure => 'symlink',
-          target => $keytab,
-        }
-        if $gss_real {
-          File['/etc/krb5.keytab'] {
-            notify => Service[$service],
-          }
         }
       }
     }
@@ -117,7 +53,10 @@ class nfsclient (
     }
   }
 
-  if $gss_real {
+  if $gss_bool {
+    $_gssd_options_notify = [ Service[rpcbind_service], Service[$service] ]
+    $_krb5_keytab_notify = Service[$service]
+
     include ::rpcbind
 
     file_line { 'NFS_SECURITY_GSS':
@@ -131,21 +70,60 @@ class nfsclient (
       ensure    => 'running',
       enable    => true,
       subscribe => File_line['NFS_SECURITY_GSS'],
+      require   =>  $nfs_requires,
     }
 
-    if $nfs_requires {
-      Service[$service] { require =>  $nfs_requires }
+    if "${::osfamily}-${::operatingsystemrelease}" =~ /^Suse-11/ {
+      file_line { 'NFS_START_SERVICES':
+        match  => '^NFS_START_SERVICES=',
+        path   => '/etc/sysconfig/nfs',
+        line   => 'NFS_START_SERVICES="yes"',
+        notify => [ Service[nfs], Service[rpcbind_service], ],
+      }
+      file_line { 'MODULES_LOADED_ON_BOOT':
+        match  => '^MODULES_LOADED_ON_BOOT=',
+        path   => '/etc/sysconfig/kernel',
+        line   => 'MODULES_LOADED_ON_BOOT="rpcsec_gss_krb5"',
+        notify => Exec[gss-module-modprobe],
+      }
+      exec { 'gss-module-modprobe':
+        command     => 'modprobe rpcsec_gss_krb5',
+        unless      => 'lsmod | egrep "^rpcsec_gss_krb5"',
+        path        => '/sbin:/usr/bin',
+        refreshonly => true,
+      }
     }
   }
+  else {
+    $_gssd_options_notify = undef
+    $_krb5_keytab_notify = undef
+  }
+
   if $keytab {
     file_line { 'GSSD_OPTIONS':
-      path  => $nfs_sysconf,
-      line  => "${keytab_line}=\"-k ${keytab}\"",
-      match => "^${keytab_line}=.*",
+      path   => $nfs_sysconf,
+      line   => "${keytab_line}=\"-k ${keytab}\"",
+      match  => "^${keytab_line}=.*",
+      notify => $_gssd_options_notify,
     }
-    if $gss_real {
-      File_line['GSSD_OPTIONS'] {
-        notify => [ Service[rpcbind_service], Service[$service], ],
+
+    if "${::osfamily}-${::operatingsystemrelease}" =~ /^(Debian-16.04|Suse-12|RedHat-7)/ {
+      file { '/etc/krb5.keytab':
+        ensure => 'symlink',
+        target => $keytab,
+        notify => $_krb5_keytab_notify,
+      }
+    }
+
+    if "${::osfamily}-${::operatingsystemrelease}" =~ /^RedHat-7/ {
+      service { 'nfs-config':
+        ensure    => 'running',
+        enable    => true,
+        subscribe => File_line['GSSD_OPTIONS'],
+      }
+      if $gss_bool {
+        Service['nfs-config'] ~> Service[$service]
+        Service['rpcbind_service'] -> Service[$service]
       }
     }
   }
