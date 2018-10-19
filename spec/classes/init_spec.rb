@@ -81,6 +81,7 @@ describe 'nfsclient' do
         'enable'    => true,
         'subscribe' => 'File_line[NFS_SECURITY_GSS]',
         'require'   => 'Service[idmapd_service]',
+        'provider'  => nil,
       })
     end
     # </OS independent resources>
@@ -107,6 +108,7 @@ describe 'nfsclient' do
         'enable'    => true,
         'subscribe' => 'File_line[NFS_SECURITY_GSS]',
         'require'   => 'Service[idmapd_service]',
+        'provider'  => nil,
       })
     end
     # </OS independent resources>
@@ -170,6 +172,7 @@ describe 'nfsclient' do
         'enable'    => true,
         'subscribe' => 'File_line[NFS_SECURITY_GSS]',
         'require'   => nil,
+        'provider'  => nil,
       })
     end
     # <OS independent resources>
@@ -203,6 +206,7 @@ describe 'nfsclient' do
         'enable'    => true,
         'subscribe' => 'File_line[NFS_SECURITY_GSS]',
         'require'   => nil,
+        'provider'  => nil,
       })
     end
     # <OS independent resources>
@@ -233,11 +237,12 @@ describe 'nfsclient' do
     end
 
     it do
-      should contain_service('gssd').with({
+      should contain_service('rpc-gssd').with({
         'ensure'    => 'running',
         'enable'    => true,
         'subscribe' => 'File_line[NFS_SECURITY_GSS]',
         'require'   => nil,
+        'provider'  => 'systemd',
       })
     end
     # <OS independent resources>
@@ -277,6 +282,7 @@ describe 'nfsclient' do
         'ensure'    => 'running',
         'enable'    => true,
         'subscribe' => 'File_line[GSSD_OPTIONS]',
+        'provider'  => nil,
       })
     end
 
@@ -419,6 +425,7 @@ describe 'nfsclient' do
         'enable'    => true,
         'subscribe' => 'File_line[NFS_SECURITY_GSS]',
         'require'   => 'Service[idmapd_service]',
+        'provider'  => nil,
       })
     end
 
@@ -448,6 +455,7 @@ describe 'nfsclient' do
         'enable'    => true,
         'subscribe' => 'File_line[GSSD_OPTIONS]',
         'notify'    => [ 'Service[rpcgssd]' ],
+        'provider'  => nil,
       })
     end
 
@@ -480,6 +488,7 @@ describe 'nfsclient' do
         'enable'    => true,
         'subscribe' => 'File_line[NFS_SECURITY_GSS]',
         'require'   => 'Service[idmapd_service]',
+        'provider'  => nil,
       })
     end
 
@@ -556,6 +565,7 @@ describe 'nfsclient' do
         'enable'    => true,
         'subscribe' => 'File_line[NFS_SECURITY_GSS]',
         'require'   => nil,
+        'provider'  => nil,
       })
     end
 
@@ -613,6 +623,7 @@ describe 'nfsclient' do
         'enable'    => true,
         'subscribe' => 'File_line[NFS_SECURITY_GSS]',
         'require'   => nil,
+        'provider'  => nil,
       })
     end
 
@@ -649,7 +660,7 @@ describe 'nfsclient' do
       should contain_file('/etc/krb5.keytab').with({
         'ensure' => 'symlink',
         'target' => '/spec/test',
-        'notify' => 'Service[gssd]',
+        'notify' => 'Service[rpc-gssd]',
       })
     end
     # </Ubuntu 16.04 specific resources>
@@ -667,11 +678,12 @@ describe 'nfsclient' do
     end
 
     it do
-      should contain_service('gssd').with({
+      should contain_service('rpc-gssd').with({
         'ensure'    => 'running',
         'enable'    => true,
         'subscribe' => 'File_line[NFS_SECURITY_GSS]',
         'require'   => nil,
+        'provider'  => 'systemd',
       })
     end
 
@@ -680,7 +692,7 @@ describe 'nfsclient' do
         'path'   => '/etc/default/nfs-common',
         'line'   => 'GSSDARGS="-k /spec/test"',
         'match'  => '^GSSDARGS=.*',
-        'notify' => [ 'Service[rpcbind_service]', 'Service[gssd]' ]
+        'notify' => [ 'Service[rpcbind_service]', 'Service[rpc-gssd]' ]
       })
     end
     # </OS independent resources>
