@@ -35,21 +35,22 @@ class nfsclient (
       }
     }
     'Debian': {
+      if $::operatingsystem != 'Ubuntu' {
+        fail('nfsclient module only supports Suse, RedHat and Ubuntu. Debian was detected.')
+      }
       $gss_line     = 'NEED_GSSD'
       $keytab_line  = 'GSSDARGS'
       $nfs_sysconf  = '/etc/default/nfs-common'
       $nfs_requires = undef
-      $service      = 'gssd'
+      $service      = 'rpc-gssd'
 
-      # Puppet 3.x Incorrectly defaults to upstart for Ubuntu 16.x
-      if $::operatingsystemrelease == '16.04' and $::operatingsystem == 'Ubuntu' {
-        Service {
-          provider => 'systemd',
-        }
+      # Puppet 3.x Incorrectly defaults to upstart for Ubuntu >= 16.x
+      Service {
+        provider => 'systemd',
       }
     }
     default: {
-      fail("nfsclient module only supports Suse, RedHat and Debian. <${::osfamily}> was detected.")
+      fail("nfsclient module only supports Suse, RedHat and Ubuntu. <${::osfamily}> was detected.")
     }
   }
 
@@ -107,7 +108,7 @@ class nfsclient (
       notify => $_gssd_options_notify,
     }
 
-    if "${::osfamily}-${::operatingsystemrelease}" =~ /^(Debian-16.04|Suse-12|RedHat-7)/ {
+    if "${::osfamily}-${::operatingsystemrelease}" =~ /^(Debian-16.04|Debian-18.04|Suse-12|RedHat-7)/ {
       file { '/etc/krb5.keytab':
         ensure => 'symlink',
         target => $keytab,
