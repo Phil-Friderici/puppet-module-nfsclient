@@ -35,6 +35,9 @@ class nfsclient (
       }
     }
     'Debian': {
+      if $::operatingsystem != 'Ubuntu' {
+        fail('nfsclient module only supports Suse, RedHat and Ubuntu. Debian was detected.')
+      }
       $gss_line     = 'NEED_GSSD'
       $keytab_line  = 'GSSDARGS'
       $nfs_sysconf  = '/etc/default/nfs-common'
@@ -49,7 +52,7 @@ class nfsclient (
       }
     }
     default: {
-      fail("nfsclient module only supports Suse, RedHat and Debian. <${::osfamily}> was detected.")
+      fail("nfsclient module only supports Suse, RedHat and Ubuntu. <${::osfamily}> was detected.")
     }
   }
 
