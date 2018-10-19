@@ -54,6 +54,18 @@ describe 'nfsclient' do
     it { should contain_class('nfsclient') }
   end
 
+  describe 'with defaults for all parameters on Ubuntu 18.04' do
+    let(:facts) do
+      {
+        :osfamily               => 'Debian',
+        :operatingsystemrelease => '18.04',
+        :operatingsystem        => 'Ubuntu',
+      }
+    end
+    it { should compile.with_all_deps }
+    it { should contain_class('nfsclient') }
+  end
+
   describe 'with gss set to valid boolean true on RedHat 6' do
     let(:facts) do
       {
@@ -248,6 +260,42 @@ describe 'nfsclient' do
     # <OS independent resources>
   end
 
+  describe 'with gss set to valid boolean true on Ubuntu 18.04' do
+    let(:facts) do
+      {
+        :osfamily               => 'Debian',
+        :operatingsystemrelease => '18.04',
+        :operatingsystem        => 'Ubuntu',
+        :lsbdistid              => 'Ubuntu', # rpcbind
+        :lsbdistrelease         => '18.04',  # rpcbind
+      }
+    end
+    let(:params) { { :gss => true } }
+
+    # <OS independent resources>
+    it { should contain_class('rpcbind') }
+
+    it do
+      should contain_file_line('NFS_SECURITY_GSS').with({
+        'path'    => '/etc/default/nfs-common',
+        'line'    => 'NEED_GSSD="yes"',
+        'match'   => '^NEED_GSSD=.*',
+        'notify'  => 'Service[rpcbind_service]',
+      })
+    end
+
+    it do
+      should contain_service('rpc-gssd').with({
+        'ensure'    => 'running',
+        'enable'    => true,
+        'subscribe' => 'File_line[NFS_SECURITY_GSS]',
+        'require'   => nil,
+        'provider'  => 'systemd',
+      })
+    end
+    # <OS independent resources>
+  end
+
   describe 'with keytab set to valid absolute path /spec/test on RedHat 6' do
     let(:facts) do
       {
@@ -376,6 +424,36 @@ describe 'nfsclient' do
       })
     end
     # </Ubuntu 16.04 specific resources>
+
+    # <OS independent resources>
+    it do
+      should contain_file_line('GSSD_OPTIONS').with({
+        'path'  => '/etc/default/nfs-common',
+        'line'  => 'GSSDARGS="-k /spec/test"',
+        'match' => '^GSSDARGS=.*',
+      })
+    end
+    # </OS independent resources>
+  end
+
+  describe 'with keytab set to valid absolute path /spec/test on Ubuntu 18.04' do
+    let(:facts) do
+      {
+        :osfamily               => 'Debian',
+        :operatingsystemrelease => '18.04',
+        :operatingsystem        => 'Ubuntu',
+      }
+    end
+    let(:params) { { :keytab => '/spec/test' } }
+
+    # <Ubuntu 18.04 specific resources>
+    it do
+      should contain_file('/etc/krb5.keytab').with({
+        'ensure' => 'symlink',
+        'target' => '/spec/test',
+      })
+    end
+    # </Ubuntu 18.04 specific resources>
 
     # <OS independent resources>
     it do
@@ -664,6 +742,66 @@ describe 'nfsclient' do
       })
     end
     # </Ubuntu 16.04 specific resources>
+
+    # <OS independent resources>
+    it { should contain_class('rpcbind') }
+
+    it do
+      should contain_file_line('NFS_SECURITY_GSS').with({
+        'path'    => '/etc/default/nfs-common',
+        'line'    => 'NEED_GSSD="yes"',
+        'match'   => '^NEED_GSSD=.*',
+        'notify'  => 'Service[rpcbind_service]',
+      })
+    end
+
+    it do
+      should contain_service('rpc-gssd').with({
+        'ensure'    => 'running',
+        'enable'    => true,
+        'subscribe' => 'File_line[NFS_SECURITY_GSS]',
+        'require'   => nil,
+        'provider'  => 'systemd',
+      })
+    end
+
+    it do
+      should contain_file_line('GSSD_OPTIONS').with({
+        'path'   => '/etc/default/nfs-common',
+        'line'   => 'GSSDARGS="-k /spec/test"',
+        'match'  => '^GSSDARGS=.*',
+        'notify' => [ 'Service[rpcbind_service]', 'Service[rpc-gssd]' ]
+      })
+    end
+    # </OS independent resources>
+  end
+
+  describe 'with gss set to valid boolean true when keytab is set to valid absolute path /spec/test on Ubuntu 18.04' do
+    let(:facts) do
+      {
+        :osfamily               => 'Debian',
+        :operatingsystemrelease => '18.04',
+        :operatingsystem        => 'Ubuntu',
+        :lsbdistid              => 'Ubuntu', # rpcbind
+        :lsbdistrelease         => '18.04',  # rpcbind
+      }
+    end
+    let(:params) do
+      {
+        :gss    => true,
+        :keytab => '/spec/test',
+      }
+    end
+
+    # <Ubuntu 18.04 specific resources>
+    it do
+      should contain_file('/etc/krb5.keytab').with({
+        'ensure' => 'symlink',
+        'target' => '/spec/test',
+        'notify' => 'Service[rpc-gssd]',
+      })
+    end
+    # </Ubuntu 18.04 specific resources>
 
     # <OS independent resources>
     it { should contain_class('rpcbind') }

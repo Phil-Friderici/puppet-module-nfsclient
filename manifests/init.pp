@@ -108,7 +108,7 @@ class nfsclient (
       notify => $_gssd_options_notify,
     }
 
-    if "${::osfamily}-${::operatingsystemrelease}" =~ /^(Debian-16.04|Suse-12|RedHat-7)/ {
+    if "${::osfamily}-${::operatingsystemrelease}" =~ /^(Debian-16.04|Debian-18.04|Suse-12|RedHat-7)/ {
       file { '/etc/krb5.keytab':
         ensure => 'symlink',
         target => $keytab,
