@@ -2,77 +2,81 @@ require 'spec_helper'
 describe 'nfsclient' do
 #it { pp catalogue.resources } # used to determine the generated md5 for the file name in citrix_unix::application
 
+  platform_facts = {
+    'RedHat 6' => {
+      :osfamily               => 'RedHat',
+      :operatingsystemrelease => '6.3',
+    },
+    'RedHat 7' => {
+      :osfamily               => 'RedHat',
+      :operatingsystemrelease => '7.3',
+    },
+    'Suse 11' => {
+      :osfamily               => 'Suse',
+      :operatingsystemrelease => '11.3',
+      :lsbmajdistrelease      => '11', # rpcbind
+    },
+    'Suse 12' => {
+      :osfamily               => 'Suse',
+      :operatingsystemrelease => '12.3',
+      :lsbmajdistrelease      => '12', # rpcbind
+    },
+    'Ubuntu 16.04' => {
+      :osfamily               => 'Debian',
+      :operatingsystemrelease => '16.04',
+      :operatingsystem        => 'Ubuntu',
+      :lsbdistid              => 'Ubuntu', # rpcbind
+      :lsbdistrelease         => '16.04',  # rpcbind
+    },
+    'Ubuntu 18.04' => {
+      :osfamily               => 'Debian',
+      :operatingsystemrelease => '18.04',
+      :operatingsystem        => 'Ubuntu',
+      :lsbdistid              => 'Ubuntu', # rpcbind
+      :lsbdistrelease         => '18.04',  # rpcbind
+    },
+  }
+
   describe 'with defaults for all parameters on RedHat 6' do
-    let(:facts) do
-      {
-        :osfamily               => 'RedHat',
-        :operatingsystemrelease => '6.5',
-      }
-    end
+    let(:facts) { platform_facts['RedHat 6'] }
     it { should compile.with_all_deps }
     it { should contain_class('nfsclient') }
     it { should contain_class('nfs::idmap') }
   end
 
   describe 'with defaults for all parameters on RedHat 7' do
+    let(:facts) { platform_facts['RedHat 7'] }
     it { should compile.with_all_deps }
     it { should contain_class('nfsclient') }
     it { should contain_class('nfs::idmap') }
   end
 
   describe 'with defaults for all parameters on Suse 11' do
-    let(:facts) do
-      {
-        :osfamily               => 'Suse',
-        :operatingsystemrelease => '12.1',
-      }
-    end
+    let(:facts) { platform_facts['Suse 11'] }
     it { should compile.with_all_deps }
     it { should contain_class('nfsclient') }
   end
 
   describe 'with defaults for all parameters on Suse 12' do
-    let(:facts) do
-      {
-        :osfamily               => 'Suse',
-        :operatingsystemrelease => '12.1',
-      }
-    end
+    let(:facts) { platform_facts['Suse 12'] }
     it { should compile.with_all_deps }
     it { should contain_class('nfsclient') }
   end
 
   describe 'with defaults for all parameters on Ubuntu 16.04' do
-    let(:facts) do
-      {
-        :osfamily               => 'Debian',
-        :operatingsystemrelease => '16.04',
-        :operatingsystem        => 'Ubuntu',
-      }
-    end
+    let(:facts) { platform_facts['Ubuntu 16.04'] }
     it { should compile.with_all_deps }
     it { should contain_class('nfsclient') }
   end
 
   describe 'with defaults for all parameters on Ubuntu 18.04' do
-    let(:facts) do
-      {
-        :osfamily               => 'Debian',
-        :operatingsystemrelease => '18.04',
-        :operatingsystem        => 'Ubuntu',
-      }
-    end
+    let(:facts) { platform_facts['Ubuntu 18.04'] }
     it { should compile.with_all_deps }
     it { should contain_class('nfsclient') }
   end
 
   describe 'with gss set to valid boolean true on RedHat 6' do
-    let(:facts) do
-      {
-        :osfamily               => 'RedHat',
-        :operatingsystemrelease => '6.5',
-      }
-    end
+    let(:facts) { platform_facts['RedHat 6'] }
     let(:params) { { :gss => true } }
 
     # <OS independent resources>
@@ -100,6 +104,7 @@ describe 'nfsclient' do
   end
 
   describe 'with gss set to valid boolean true on RedHat 7' do
+    let(:facts) { platform_facts['RedHat 7'] }
     let(:params) { { :gss => true } }
 
     # <OS independent resources>
@@ -127,13 +132,7 @@ describe 'nfsclient' do
   end
 
   describe 'with gss set to valid boolean true on Suse 11' do
-    let(:facts) do
-      {
-        :osfamily               => 'Suse',
-        :operatingsystemrelease => '11.1',
-        :lsbmajdistrelease      => '11', # rpcbind
-      }
-    end
+    let(:facts) { platform_facts['Suse 11'] }
     let(:params) { { :gss => true } }
 
 
@@ -191,13 +190,7 @@ describe 'nfsclient' do
   end
 
   describe 'with gss set to valid boolean true on Suse 12' do
-    let(:facts) do
-      {
-        :osfamily               => 'Suse',
-        :operatingsystemrelease => '12.1',
-        :lsbmajdistrelease      => '12',
-      }
-    end
+    let(:facts) { platform_facts['Suse 12'] }
     let(:params) { { :gss => true } }
 
     # <OS independent resources>
@@ -225,15 +218,7 @@ describe 'nfsclient' do
   end
 
   describe 'with gss set to valid boolean true on Ubuntu 16.04' do
-    let(:facts) do
-      {
-        :osfamily               => 'Debian',
-        :operatingsystemrelease => '16.04',
-        :operatingsystem        => 'Ubuntu',
-        :lsbdistid              => 'Ubuntu', # rpcbind
-        :lsbdistrelease         => '16.04',  # rpcbind
-      }
-    end
+    let(:facts) { platform_facts['Ubuntu 16.04'] }
     let(:params) { { :gss => true } }
 
     # <OS independent resources>
@@ -261,15 +246,7 @@ describe 'nfsclient' do
   end
 
   describe 'with gss set to valid boolean true on Ubuntu 18.04' do
-    let(:facts) do
-      {
-        :osfamily               => 'Debian',
-        :operatingsystemrelease => '18.04',
-        :operatingsystem        => 'Ubuntu',
-        :lsbdistid              => 'Ubuntu', # rpcbind
-        :lsbdistrelease         => '18.04',  # rpcbind
-      }
-    end
+    let(:facts) { platform_facts['Ubuntu 18.04'] }
     let(:params) { { :gss => true } }
 
     # <OS independent resources>
@@ -297,12 +274,7 @@ describe 'nfsclient' do
   end
 
   describe 'with keytab set to valid absolute path /spec/test on RedHat 6' do
-    let(:facts) do
-      {
-        :osfamily               => 'RedHat',
-        :operatingsystemrelease => '6.5',
-      }
-    end
+    let(:facts) { platform_facts['RedHat 6'] }
     let(:params) { { :keytab => '/spec/test' } }
 
     # <RHEL 6 specific resources>
@@ -322,6 +294,7 @@ describe 'nfsclient' do
   end
 
   describe 'with keytab set to valid absolute path /spec/test on RedHat 7' do
+    let(:facts) { platform_facts['RedHat 7'] }
     let(:params) { { :keytab => '/spec/test' } }
 
     # <RHEL 7 specific resources>
@@ -354,12 +327,7 @@ describe 'nfsclient' do
   end
 
   describe 'with keytab set to valid absolute path /spec/test on Suse 11' do
-    let(:facts) do
-      {
-        :osfamily               => 'Suse',
-        :operatingsystemrelease => '11.1',
-      }
-    end
+    let(:facts) { platform_facts['Suse 11'] }
     let(:params) { { :keytab => '/spec/test' } }
 
     # <Suse 11 specific resources>
@@ -378,12 +346,7 @@ describe 'nfsclient' do
   end
 
   describe 'with keytab set to valid absolute path /spec/test on Suse 12' do
-    let(:facts) do
-      {
-        :osfamily               => 'Suse',
-        :operatingsystemrelease => '12.1',
-      }
-    end
+    let(:facts) { platform_facts['Suse 12'] }
     let(:params) { { :keytab => '/spec/test' } }
 
     # <Suse 12 specific resources>
@@ -407,13 +370,7 @@ describe 'nfsclient' do
   end
 
   describe 'with keytab set to valid absolute path /spec/test on Ubuntu 16.04' do
-    let(:facts) do
-      {
-        :osfamily               => 'Debian',
-        :operatingsystemrelease => '16.04',
-        :operatingsystem        => 'Ubuntu',
-      }
-    end
+    let(:facts) { platform_facts['Ubuntu 16.04'] }
     let(:params) { { :keytab => '/spec/test' } }
 
     # <Ubuntu 16.04 specific resources>
@@ -437,13 +394,7 @@ describe 'nfsclient' do
   end
 
   describe 'with keytab set to valid absolute path /spec/test on Ubuntu 18.04' do
-    let(:facts) do
-      {
-        :osfamily               => 'Debian',
-        :operatingsystemrelease => '18.04',
-        :operatingsystem        => 'Ubuntu',
-      }
-    end
+    let(:facts) { platform_facts['Ubuntu 18.04'] }
     let(:params) { { :keytab => '/spec/test' } }
 
     # <Ubuntu 18.04 specific resources>
@@ -467,12 +418,7 @@ describe 'nfsclient' do
   end
 
   describe 'with gss set to valid boolean true when keytab is set to valid absolute path /spec/test on RedHat 6' do
-    let(:facts) do
-      {
-        :osfamily               => 'RedHat',
-        :operatingsystemrelease => '6.5',
-      }
-    end
+    let(:facts) { platform_facts['RedHat 6'] }
     let(:params) do
       {
         :gss    => true,
@@ -519,6 +465,7 @@ describe 'nfsclient' do
   end
 
   describe 'with gss set to valid boolean true when keytab is set to valid absolute path /spec/test on RedHat 7' do
+    let(:facts) { platform_facts['RedHat 7'] }
     let(:params) do
       {
         :gss    => true,
@@ -582,13 +529,7 @@ describe 'nfsclient' do
   end
 
   describe 'with gss set to valid boolean true when keytab is set to valid absolute path /spec/test on Suse 11' do
-    let(:facts) do
-      {
-        :osfamily               => 'Suse',
-        :operatingsystemrelease => '11.1',
-        :lsbmajdistrelease      => '11', # rpcbind
-      }
-    end
+    let(:facts) { platform_facts['Suse 11'] }
     let(:params) do
       {
         :gss    => true,
@@ -659,13 +600,7 @@ describe 'nfsclient' do
   end
 
   describe 'with gss set to valid boolean true when keytab is set to valid absolute path /spec/test on Suse 12' do
-    let(:facts) do
-      {
-        :osfamily               => 'Suse',
-        :operatingsystemrelease => '12.1',
-        :lsbmajdistrelease      => '12',
-      }
-    end
+    let(:facts) { platform_facts['Suse 12'] }
     let(:params) do
       {
         :gss    => true,
@@ -717,15 +652,7 @@ describe 'nfsclient' do
   end
 
   describe 'with gss set to valid boolean true when keytab is set to valid absolute path /spec/test on Ubuntu 16.04' do
-    let(:facts) do
-      {
-        :osfamily               => 'Debian',
-        :operatingsystemrelease => '16.04',
-        :operatingsystem        => 'Ubuntu',
-        :lsbdistid              => 'Ubuntu', # rpcbind
-        :lsbdistrelease         => '16.04',  # rpcbind
-      }
-    end
+    let(:facts) { platform_facts['Ubuntu 16.04'] }
     let(:params) do
       {
         :gss    => true,
@@ -777,15 +704,7 @@ describe 'nfsclient' do
   end
 
   describe 'with gss set to valid boolean true when keytab is set to valid absolute path /spec/test on Ubuntu 18.04' do
-    let(:facts) do
-      {
-        :osfamily               => 'Debian',
-        :operatingsystemrelease => '18.04',
-        :operatingsystem        => 'Ubuntu',
-        :lsbdistid              => 'Ubuntu', # rpcbind
-        :lsbdistrelease         => '18.04',  # rpcbind
-      }
-    end
+    let(:facts) { platform_facts['Ubuntu 18.04'] }
     let(:params) do
       {
         :gss    => true,
