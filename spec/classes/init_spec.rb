@@ -299,11 +299,11 @@ describe 'nfsclient' do
 
     # <RHEL 7 specific resources>
     it do
-      should contain_service('nfs-config').with({
-        'ensure'    => 'running',
-        'enable'    => true,
-        'subscribe' => 'File_line[GSSD_OPTIONS]',
-        'provider'  => nil,
+      should contain_exec('nfs-config').with({
+        'command'     => 'service nfs-config start',
+        'path'        => '/sbin:/usr/sbin',
+        'refreshonly' => true,
+        'subscribe'   => 'File_line[GSSD_OPTIONS]',
       })
     end
 
@@ -475,12 +475,11 @@ describe 'nfsclient' do
 
     # <RHEL 7 specific resources>
     it do
-      should contain_service('nfs-config').with({
-        'ensure'    => 'running',
-        'enable'    => true,
-        'subscribe' => 'File_line[GSSD_OPTIONS]',
-        'notify'    => [ 'Service[rpcgssd]' ],
-        'provider'  => nil,
+      should contain_exec('nfs-config').with({
+        'command'     => 'service nfs-config start',
+        'path'        => '/sbin:/usr/sbin',
+        'refreshonly' => true,
+        'subscribe'   => 'File_line[GSSD_OPTIONS]',
       })
     end
 
