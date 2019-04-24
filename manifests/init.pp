@@ -117,13 +117,14 @@ class nfsclient (
     }
 
     if "${::osfamily}-${::operatingsystemrelease}" =~ /^RedHat-7/ {
-      service { 'nfs-config':
-        ensure    => 'running',
-        enable    => true,
-        subscribe => File_line['GSSD_OPTIONS'],
+      exec { 'nfs-config':
+        command     => 'service nfs-config start',
+        path        => '/sbin:/usr/sbin',
+        refreshonly => true,
+        subscribe   => File_line['GSSD_OPTIONS'],
       }
       if $gss_bool {
-        Service['nfs-config'] ~> Service[$service]
+        Exec['nfs-config'] ~> Service[$service]
         Service['rpcbind_service'] -> Service[$service]
       }
     }
