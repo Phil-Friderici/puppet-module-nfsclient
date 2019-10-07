@@ -20,8 +20,10 @@ class nfsclient (
       $keytab_line  = 'RPCGSSDARGS'
       $nfs_sysconf  = '/etc/sysconfig/nfs'
       $nfs_requires = Service['idmapd_service']
-      $service      = 'rpcgssd'
-
+      $service      = $::operatingsystemrelease ? {
+        /6\.*/  => 'rpcgssd',
+        default => 'rpc-gssd',
+      }
       include ::nfs::idmap
     }
     'Suse': {

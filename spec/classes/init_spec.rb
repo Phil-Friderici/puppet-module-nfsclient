@@ -120,7 +120,7 @@ describe 'nfsclient' do
     end
 
     it do
-      should contain_service('rpcgssd').with({
+      should contain_service('rpc-gssd').with({
         'ensure'    => 'running',
         'enable'    => true,
         'subscribe' => 'File_line[NFS_SECURITY_GSS]',
@@ -487,11 +487,11 @@ describe 'nfsclient' do
       should contain_file('/etc/krb5.keytab').with({
         'ensure' => 'symlink',
         'target' => '/spec/test',
-        'notify' => 'Service[rpcgssd]',
+        'notify' => 'Service[rpc-gssd]',
       })
     end
 
-    it { should contain_service('rpcbind_service').with_before([ 'Service[rpcgssd]' ]) }
+    it { should contain_service('rpcbind_service').with_before([ 'Service[rpc-gssd]' ]) }
     # </RHEL 7 specific resources>
 
     # <OS independent resources>
@@ -507,7 +507,7 @@ describe 'nfsclient' do
     end
 
     it do
-      should contain_service('rpcgssd').with({
+      should contain_service('rpc-gssd').with({
         'ensure'    => 'running',
         'enable'    => true,
         'subscribe' => 'File_line[NFS_SECURITY_GSS]',
@@ -521,7 +521,7 @@ describe 'nfsclient' do
         'path'   => '/etc/sysconfig/nfs',
         'line'   => 'RPCGSSDARGS="-k /spec/test"',
         'match'  => '^RPCGSSDARGS=.*',
-        'notify' => [ 'Service[rpcbind_service]', 'Service[rpcgssd]' ]
+        'notify' => [ 'Service[rpcbind_service]', 'Service[rpc-gssd]' ]
       })
     end
     # </OS independent resources>
