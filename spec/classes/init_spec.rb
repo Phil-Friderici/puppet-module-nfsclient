@@ -279,7 +279,6 @@ describe 'nfsclient' do
 
     # <RHEL 6 specific resources>
     it { should_not contain_service('nfs-config') }
-    it { should_not contain_file('/etc/krb5.keytab') }
     # </RHEL 6 specific resources>
 
     # <OS independent resources>
@@ -307,12 +306,6 @@ describe 'nfsclient' do
       })
     end
 
-    it do
-      should contain_file('/etc/krb5.keytab').with({
-        'ensure' => 'symlink',
-        'target' => '/spec/test',
-      })
-    end
     # </RHEL 7 specific resources>
 
     # <OS independent resources>
@@ -330,10 +323,6 @@ describe 'nfsclient' do
     let(:facts) { platform_facts['Suse 11'] }
     let(:params) { { :keytab => '/spec/test' } }
 
-    # <Suse 11 specific resources>
-    it { should_not contain_file('/etc/krb5.keytab') }
-    # </Suse 11 specific resources>
-
     # <OS independent resources>
     it do
       should contain_file_line('GSSD_OPTIONS').with({
@@ -348,15 +337,6 @@ describe 'nfsclient' do
   describe 'with keytab set to valid absolute path /spec/test on Suse 12' do
     let(:facts) { platform_facts['Suse 12'] }
     let(:params) { { :keytab => '/spec/test' } }
-
-    # <Suse 12 specific resources>
-    it do
-      should contain_file('/etc/krb5.keytab').with({
-        'ensure' => 'symlink',
-        'target' => '/spec/test',
-      })
-    end
-    # </Suse 12 specific resources>
 
     # <OS independent resources>
     it do
@@ -373,15 +353,6 @@ describe 'nfsclient' do
     let(:facts) { platform_facts['Ubuntu 16.04'] }
     let(:params) { { :keytab => '/spec/test' } }
 
-    # <Ubuntu 16.04 specific resources>
-    it do
-      should contain_file('/etc/krb5.keytab').with({
-        'ensure' => 'symlink',
-        'target' => '/spec/test',
-      })
-    end
-    # </Ubuntu 16.04 specific resources>
-
     # <OS independent resources>
     it do
       should contain_file_line('GSSD_OPTIONS').with({
@@ -396,15 +367,6 @@ describe 'nfsclient' do
   describe 'with keytab set to valid absolute path /spec/test on Ubuntu 18.04' do
     let(:facts) { platform_facts['Ubuntu 18.04'] }
     let(:params) { { :keytab => '/spec/test' } }
-
-    # <Ubuntu 18.04 specific resources>
-    it do
-      should contain_file('/etc/krb5.keytab').with({
-        'ensure' => 'symlink',
-        'target' => '/spec/test',
-      })
-    end
-    # </Ubuntu 18.04 specific resources>
 
     # <OS independent resources>
     it do
@@ -428,7 +390,6 @@ describe 'nfsclient' do
 
     # <RHEL 6 specific resources>
     it { should_not contain_service('nfs-config') }
-    it { should_not contain_file('/etc/krb5.keytab') }
     # </RHEL 6 specific resources>
 
     # <OS independent resources>
@@ -480,14 +441,6 @@ describe 'nfsclient' do
         'path'        => '/sbin:/usr/sbin',
         'refreshonly' => true,
         'subscribe'   => 'File_line[GSSD_OPTIONS]',
-      })
-    end
-
-    it do
-      should contain_file('/etc/krb5.keytab').with({
-        'ensure' => 'symlink',
-        'target' => '/spec/test',
-        'notify' => 'Service[rpc-gssd]',
       })
     end
 
@@ -607,16 +560,6 @@ describe 'nfsclient' do
       }
     end
 
-    # <Suse 12 specific resources>
-    it do
-      should contain_file('/etc/krb5.keytab').with({
-        'ensure' => 'symlink',
-        'target' => '/spec/test',
-        'notify' => 'Service[rpc-gssd]',
-      })
-    end
-    # </Suse 12 specific resources>
-
     # <OS independent resources>
     it { should contain_class('rpcbind') }
 
@@ -659,16 +602,6 @@ describe 'nfsclient' do
       }
     end
 
-    # <Ubuntu 16.04 specific resources>
-    it do
-      should contain_file('/etc/krb5.keytab').with({
-        'ensure' => 'symlink',
-        'target' => '/spec/test',
-        'notify' => 'Service[rpc-gssd]',
-      })
-    end
-    # </Ubuntu 16.04 specific resources>
-
     # <OS independent resources>
     it { should contain_class('rpcbind') }
 
@@ -710,16 +643,6 @@ describe 'nfsclient' do
         :keytab => '/spec/test',
       }
     end
-
-    # <Ubuntu 18.04 specific resources>
-    it do
-      should contain_file('/etc/krb5.keytab').with({
-        'ensure' => 'symlink',
-        'target' => '/spec/test',
-        'notify' => 'Service[rpc-gssd]',
-      })
-    end
-    # </Ubuntu 18.04 specific resources>
 
     # <OS independent resources>
     it { should contain_class('rpcbind') }
