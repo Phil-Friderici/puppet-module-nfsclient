@@ -8,7 +8,7 @@ Puppet module to manage nfs client configuration.
 
 NOTE: This module does not manage /etc/krb5.keytab any more.
 Use a Keberos module such as [kodguru/puppet-module-krb5](https://github.com/kodguru/puppet-module-krb5/)
-(version 1.0.0 or newer) if you need to manage Kerberos itself.
+(version 0.8.0 or newer) if you need to manage Kerberos itself.
 
 To ensure the service in restarted when /etc/krb5.keytab is updated you could
 add logic similar to the code below in your profile to ensure it occurs.
