@@ -58,7 +58,6 @@ class nfsclient (
 
   if $gss_bool {
     $_gssd_options_notify = [ Service[rpcbind_service], Service[$service] ]
-    $_krb5_keytab_notify = Service[$service]
 
     include ::rpcbind
 
@@ -99,7 +98,6 @@ class nfsclient (
   }
   else {
     $_gssd_options_notify = undef
-    $_krb5_keytab_notify = undef
   }
 
   if $keytab {
@@ -108,14 +106,6 @@ class nfsclient (
       line   => "${keytab_line}=\"-k ${keytab}\"",
       match  => "^${keytab_line}=.*",
       notify => $_gssd_options_notify,
-    }
-
-    if "${::osfamily}-${::operatingsystemrelease}" =~ /^(Debian-16.04|Debian-18.04|Suse-12|RedHat-7)/ {
-      file { '/etc/krb5.keytab':
-        ensure => 'symlink',
-        target => $keytab,
-        notify => $_krb5_keytab_notify,
-      }
     }
 
     if "${::osfamily}-${::operatingsystemrelease}" =~ /^RedHat-7/ {
