@@ -11,6 +11,10 @@ describe 'nfsclient' do
       :osfamily               => 'RedHat',
       :operatingsystemrelease => '7.3',
     },
+    'RedHat 8' => {
+      :osfamily               => 'RedHat',
+      :operatingsystemrelease => '8.0',
+    },
     'Suse 11' => {
       :osfamily               => 'Suse',
       :operatingsystemrelease => '11.3',
@@ -46,6 +50,13 @@ describe 'nfsclient' do
 
   describe 'with defaults for all parameters on RedHat 7' do
     let(:facts) { platform_facts['RedHat 7'] }
+    it { should compile.with_all_deps }
+    it { should contain_class('nfsclient') }
+    it { should contain_class('nfs::idmap') }
+  end
+
+  describe 'with defaults for all parameters on RedHat 8' do
+    let(:facts) { platform_facts['RedHat 8'] }
     it { should compile.with_all_deps }
     it { should contain_class('nfsclient') }
     it { should contain_class('nfs::idmap') }
@@ -124,6 +135,35 @@ describe 'nfsclient' do
         'ensure'    => 'running',
         'enable'    => true,
         'subscribe' => 'File_line[NFS_SECURITY_GSS]',
+        'require'   => 'Service[idmapd_service]',
+        'provider'  => nil,
+      })
+    end
+    # </OS independent resources>
+  end
+
+  describe 'with gss set to valid boolean true on RedHat 8' do
+    let(:facts) { platform_facts['RedHat 8'] }
+    let(:params) { { :gss => true } }
+
+    # <OS independent resources>
+    it { should contain_class('rpcbind') }
+
+    it { should_not contain_file_line('NFS_SECURITY_GSS') }
+
+    it do
+      should contain_service('gss_service').with({
+        'ensure' => 'running',
+        'enable' => 'true',
+        'name'   => 'auth-rpcgss-module.service',
+      })
+    end
+
+    it do
+      should contain_service('rpc-gssd').with({
+        'ensure'    => 'running',
+        'enable'    => true,
+        'subscribe' => 'Service[gss_service]',
         'require'   => 'Service[idmapd_service]',
         'provider'  => nil,
       })
@@ -319,6 +359,14 @@ describe 'nfsclient' do
     # </OS independent resources>
   end
 
+  describe 'with keytab set to valid absolute path /spec/test on RedHat 8' do
+    let(:facts) { platform_facts['RedHat 8'] }
+    let(:params) { { :keytab => '/spec/test' } }
+
+    it { should_not contain_exec('nfs-config') }
+    it { should_not contain_file_line('GSSD_OPTIONS') }
+  end
+
   describe 'with keytab set to valid absolute path /spec/test on Suse 11' do
     let(:facts) { platform_facts['Suse 11'] }
     let(:params) { { :keytab => '/spec/test' } }
@@ -478,6 +526,40 @@ describe 'nfsclient' do
       })
     end
     # </OS independent resources>
+  end
+
+  describe 'with gss set to valid boolean true when keytab is set to valid absolute path /spec/test on RedHat 8' do
+    let(:facts) { platform_facts['RedHat 8'] }
+    let(:params) do
+      {
+        :gss    => true,
+        :keytab => '/spec/test',
+      }
+    end
+
+    it { should contain_class('rpcbind') }
+
+    it do
+      should contain_service('rpc-gssd').with({
+        'ensure'    => 'running',
+        'enable'    => true,
+        'subscribe' => 'Service[gss_service]',
+        'require'   => 'Service[idmapd_service]',
+        'provider'  => nil,
+      })
+    end
+
+    it do
+      should contain_service('gss_service').with({
+        'ensure' => 'running',
+        'enable' => 'true',
+        'name'   => 'auth-rpcgss-module.service',
+      })
+    end
+
+    it { should_not contain_exec('nfs-config') }
+    it { should_not contain_file_line('NFS_SECURITY_GSS') }
+    it { should_not contain_file_line('GSSD_OPTIONS') }
   end
 
   describe 'with gss set to valid boolean true when keytab is set to valid absolute path /spec/test on Suse 11' do
