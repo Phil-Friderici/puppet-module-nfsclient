@@ -16,22 +16,29 @@ class nfsclient (
 
   case $::osfamily {
     'RedHat': {
-      $gss_line     = 'SECURE_NFS'
-      $keytab_line  = 'RPCGSSDARGS'
-      $nfs_sysconf  = '/etc/sysconfig/nfs'
-      $nfs_requires = Service['idmapd_service']
-      $service      = $::operatingsystemrelease ? {
-        /6\.*/  => 'rpcgssd',
+      $nfs_config_method = $::operatingsystemrelease ? {
+        /^[67]/ => 'sysconfig',
+        default => 'service',
+      }
+      $module_service    = 'auth-rpcgss-module.service'
+      $gss_line          = 'SECURE_NFS'
+      $keytab_line       = 'RPCGSSDARGS'
+      $nfs_sysconf       = '/etc/sysconfig/nfs'
+      $nfs_requires      = Service['idmapd_service']
+      $service           = $::operatingsystemrelease ? {
+        /^6/    => 'rpcgssd',
         default => 'rpc-gssd',
       }
       include ::nfs::idmap
     }
     'Suse': {
-      $gss_line    = 'NFS_SECURITY_GSS'
-      $keytab_line = 'GSSD_OPTIONS'
-      $nfs_sysconf  = '/etc/sysconfig/nfs'
-      $nfs_requires = undef
-      $service = $::operatingsystemrelease ? {
+      $nfs_config_method = 'sysconfig'
+      $module_service    = undef
+      $gss_line          = 'NFS_SECURITY_GSS'
+      $keytab_line       = 'GSSD_OPTIONS'
+      $nfs_sysconf       = '/etc/sysconfig/nfs'
+      $nfs_requires      = undef
+      $service           = $::operatingsystemrelease ? {
         /^11/   => 'nfs',
         default => 'rpc-gssd',
       }
@@ -40,11 +47,13 @@ class nfsclient (
       if $::operatingsystem != 'Ubuntu' {
         fail('nfsclient module only supports Suse, RedHat and Ubuntu. Debian was detected.')
       }
-      $gss_line     = 'NEED_GSSD'
-      $keytab_line  = 'GSSDARGS'
-      $nfs_sysconf  = '/etc/default/nfs-common'
-      $nfs_requires = undef
-      $service      = 'rpc-gssd'
+      $nfs_config_method = 'sysconfig'
+      $module_service    = undef
+      $gss_line          = 'NEED_GSSD'
+      $keytab_line       = 'GSSDARGS'
+      $nfs_sysconf       = '/etc/default/nfs-common'
+      $nfs_requires      = undef
+      $service           = 'rpc-gssd'
 
       # Puppet 3.x Incorrectly defaults to upstart for Ubuntu >= 16.x
       Service {
@@ -56,23 +65,36 @@ class nfsclient (
     }
   }
 
+  $service_subscribe = $nfs_config_method ? {
+    'sysconfig' => File_line['NFS_SECURITY_GSS'],
+    'service'   => Service['gss_service'],
+  }
+
   if $gss_bool {
     $_gssd_options_notify = [ Service[rpcbind_service], Service[$service] ]
 
     include ::rpcbind
 
-    file_line { 'NFS_SECURITY_GSS':
-      path   => $nfs_sysconf,
-      line   => "${gss_line}=\"yes\"",
-      match  => "^${gss_line}=.*",
-      notify => Service[rpcbind_service],
+    if $nfs_config_method == 'sysconfig' {
+      file_line { 'NFS_SECURITY_GSS':
+        path   => $nfs_sysconf,
+        line   => "${gss_line}=\"yes\"",
+        match  => "^${gss_line}=.*",
+        notify => Service[rpcbind_service],
+      }
+    } elsif $nfs_config_method == 'service' {
+      service { 'gss_service':
+        ensure => 'running',
+        name   => $module_service,
+        enable => true,
+      }
     }
 
     service { $service:
       ensure    => 'running',
       enable    => true,
-      subscribe => File_line['NFS_SECURITY_GSS'],
-      require   =>  $nfs_requires,
+      subscribe => $service_subscribe,
+      require   => $nfs_requires,
     }
 
     if "${::osfamily}-${::operatingsystemrelease}" =~ /^Suse-11/ {
@@ -101,11 +123,13 @@ class nfsclient (
   }
 
   if $keytab {
-    file_line { 'GSSD_OPTIONS':
-      path   => $nfs_sysconf,
-      line   => "${keytab_line}=\"-k ${keytab}\"",
-      match  => "^${keytab_line}=.*",
-      notify => $_gssd_options_notify,
+    if $nfs_config_method == 'sysconfig' {
+      file_line { 'GSSD_OPTIONS':
+        path   => $nfs_sysconf,
+        line   => "${keytab_line}=\"-k ${keytab}\"",
+        match  => "^${keytab_line}=.*",
+        notify => $_gssd_options_notify,
+      }
     }
 
     if "${::osfamily}-${::operatingsystemrelease}" =~ /^RedHat-7/ {
